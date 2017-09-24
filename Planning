@@ -1,0 +1,52 @@
+#!/bin/bash
+
+chemin=/var/www/plannings
+
+# Note: les anciennes adresses étaient de la forme:
+# https://e-campus.cpe.fr/file.php/1/plannings/planning_3eti_semaine.xls?forcedownload=1
+
+
+cd $chemin/
+
+for niveau in {3..5}{ETI,CGP}
+do
+	niveau_lowercase=${niveau,,}
+	adresse="https://oga.cpe.fr/ressources/plannings/html/planning_${niveau_lowercase}_semaine.html?forcedownload=1"
+	#Telechargement (Note: q pour quiet, le supprimer pour débugger)
+	wget -q -O $niveau/planning2.html --no-check-certificate $adresse
+
+	if cmp -s "$niveau/index.html" "$niveau/planning2.html"
+	then
+		echo "Le planning des $niveau n'a pas changé, on ne le met donc pas à jour"
+	else
+		mv $niveau/index.html $niveau/Precedent.html
+		mv $niveau/planning2.html $niveau/index.html
+	fi
+done
+
+
+### Planning Langues
+
+# En fin de semaine, permutation des plannings de langue.
+# On se sert du timestamp sur le fichier next pour voir si il a été modifié la semaine dernière.
+# Si c'est le cas, on écrase l'index actuel.
+
+index_path=/var/www/plannings/langues/index.html
+index_next_path=/var/www/plannings/langues/next-index.html
+
+
+if [[ -f $index_next_path ]]
+then
+	echo "Prochain planning de langues détecté, on vérifie si une rotation est nécessaire"
+	semaine_actuelle=$(date +%W)
+	semaine_modification_next_index=$(date +%W --date=@$(stat -c %Y $index_next_path))
+	if [[ $semaine_modification_next_index == $semaine_actuelle ]]
+	then
+		echo "Le fichier de la semaine prochaine a été modifié cette semaine, on le laisse en place"
+	else
+		echo "Le fichier de la semaine prochaine n'a pas été modifié cette semaine, on remplace le fichier actuel par celui-ci"
+		mv $index_next_path $index_path
+	fi
+else
+	echo "Prochain planning de langue non détecté"
+fi
