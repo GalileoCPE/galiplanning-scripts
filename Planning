@@ -1,10 +1,14 @@
 #!/bin/bash
 
-chemin=/var/www/plannings
+if [[ -n $1 ]]
+then
+    chemin=$1
+else
+    chemin=/var/www/plannings
+fi
 
 # Note: les anciennes adresses étaient de la forme:
 # https://e-campus.cpe.fr/file.php/1/plannings/planning_3eti_semaine.xls?forcedownload=1
-
 
 cd $chemin/
 
