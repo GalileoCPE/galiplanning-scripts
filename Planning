@@ -15,8 +15,10 @@ do
 	#Telechargement (Note: q pour quiet, le supprimer pour débugger)
 	wget -q -O $niveau/planning2.html --no-check-certificate $adresse
 
-	if [ $(stat --printf="%s" $niveau/planning2.html) -ne 0 ] &&
-	   cmp -s "$niveau/index.html" "$niveau/planning2.html"
+	if [ $(stat --printf="%s" $niveau/planning2.html) -eq 0 ]
+	then
+		echo "Le planning $niveau récupéré est vide, abandon"
+	elif cmp -s "$niveau/index.html" "$niveau/planning2.html"
 	then
 		echo "Le planning des $niveau n'a pas changé, on ne le met donc pas à jour"
 	else
